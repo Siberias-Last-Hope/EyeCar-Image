@@ -1,0 +1,17 @@
+[Unit]
+Description=EyeCar (docker compose, profile car)
+After=docker.service eyecar-images-load.service network.target
+Requires=docker.service
+Wants=eyecar-images-load.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/eyecar
+# no pull: there may be no internet, the images come from eyecar-images-load.service
+ExecStart=/usr/bin/docker compose --env-file /opt/eyecar/.env -f /opt/eyecar/docker/compose.yaml --profile car up -d --pull never --no-build
+ExecStop=/usr/bin/docker compose --env-file /opt/eyecar/.env -f /opt/eyecar/docker/compose.yaml --profile car down
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

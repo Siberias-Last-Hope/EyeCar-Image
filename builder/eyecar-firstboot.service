@@ -1,0 +1,13 @@
+[Unit]
+Description=EyeCar first boot (host name and Wi-Fi access point eyecar-XXXX)
+ConditionPathExists=!/var/lib/eyecar/firstboot.done
+After=local-fs.target
+Before=NetworkManager.service avahi-daemon.service ssh.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/eyecar-firstboot
+
+[Install]
+WantedBy=multi-user.target

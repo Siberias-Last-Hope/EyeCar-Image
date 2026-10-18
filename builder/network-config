@@ -1,0 +1,15 @@
+# cloud-init network-config (netplan v2 syntax), rendered to /etc/netplan at first boot.
+#
+# Split of the network between the two managers:
+#   systemd-networkd (through netplan): eth0 only, DHCP.
+#   NetworkManager: wlan0 only, the access point (profile made by eyecar-firstboot.service).
+# wlan0 is deliberately absent here, so networkd never touches it; NetworkManager is told
+# to ignore everything but wlan0 in /etc/NetworkManager/conf.d/10-eyecar.conf (customize.sh).
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp6: false
+      optional: true

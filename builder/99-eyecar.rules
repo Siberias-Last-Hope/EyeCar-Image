@@ -1,0 +1,8 @@
+# Stable device name of the Arduino Mega 2560 (installed to /etc/udev/rules.d/ in the SD image).
+# 1a86:7523  CH340 USB-UART (most Mega clones)
+# 2341:0042  Arduino Mega 2560 R3
+# 2341:0010  Arduino Mega 2560 (older)
+# Any other board with the same ids gets the link too: connect one Arduino at a time.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="eyecar_arduino", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", SYMLINK+="eyecar_arduino", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0010", SYMLINK+="eyecar_arduino", GROUP="dialout", MODE="0660"

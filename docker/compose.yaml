@@ -1,0 +1,39 @@
+# Copyright (C) 2026 MaxX-Akela, MIT License
+name: eyecar
+
+# Build context is the repository root.
+#   car: the car itself (Raspberry Pi), all devices are visible
+#     docker compose -f docker/compose.yaml --profile car up --build
+#   pc:  a laptop on the same network, no devices; Foxglove bridge and tools only
+#     docker compose -f docker/compose.yaml --profile pc up --build
+
+x-ros: &ros
+  image: ${ROS_IMAGE:-eyecar-ros:${TAG:-latest}}
+  build:
+    context: ..
+    dockerfile: docker/ros/Dockerfile
+    target: eyecar-ros
+  network_mode: host
+  ipc: host
+  restart: unless-stopped
+  stop_signal: SIGINT
+  stop_grace_period: 30s
+  environment:
+    ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+
+services:
+
+  car:
+    <<: *ros
+    profiles: [ car ]
+    privileged: true
+    volumes:
+      # /dev/video0 (USB camera) and /dev/eyecar_arduino (udev link on the host)
+      - /dev:/dev
+    command: ros2 launch eyecar_bringup eyecar.launch.py
+
+  pc:
+    <<: *ros
+    profiles: [ pc ]
+    # no camera on a laptop
+    command: ros2 launch eyecar_bringup eyecar.launch.py camera:=false

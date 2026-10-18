@@ -1,0 +1,11 @@
+#cloud-config
+# First boot configuration. The user `pi` is created in the image (customize.sh);
+# listing it here stops cloud-init from creating the default `ubuntu` user.
+# The host name is set by eyecar-firstboot.service.
+preserve_hostname: true
+ssh_pwauth: true
+ssh_deletekeys: true
+users:
+  - name: pi
+package_update: false
+package_upgrade: false

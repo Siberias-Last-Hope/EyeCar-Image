@@ -1,0 +1,15 @@
+[Unit]
+Description=Load offline Docker images of the EyeCar (first boot only)
+After=docker.service
+Requires=docker.service
+Before=eyecar.service
+ConditionPathExistsGlob=/opt/eyecar/images/*.tar.zst
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=infinity
+ExecStart=/opt/eyecar/load-images.sh
+
+[Install]
+WantedBy=multi-user.target
