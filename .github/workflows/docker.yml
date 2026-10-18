@@ -1,10 +1,12 @@
 # Copyright (C) 2026 MaxX-Akela, MIT License
 name: docker
 
-# Only when a release is published (tag v*): the image gets the tags latest and X.Y.Z
+# When a release is published (tag v*) the image gets the tags latest, X.Y.Z and sha-<commit>;
+# a manual run (Actions -> docker -> Run workflow) gives latest and sha-<commit>
 on:
   release:
     types: [ published ]
+  workflow_dispatch:
 
 concurrency:
   group: docker-${{ github.ref }}

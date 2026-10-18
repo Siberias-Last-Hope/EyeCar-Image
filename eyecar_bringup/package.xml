@@ -3,7 +3,7 @@
 <package format="3">
   <name>eyecar_bringup</name>
   <version>0.0.0</version>
-  <description>Tlaunch-files & configs & params</description>
+  <description>Launch files, configs and params of the EyeCar</description>
   <maintainer email="mstepanov2610@gmail.com">akela</maintainer>
   <license>MIT</license>
 

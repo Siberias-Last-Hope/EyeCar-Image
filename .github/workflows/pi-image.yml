@@ -2,11 +2,18 @@
 name: pi-image
 
 # SD card image for Raspberry Pi 5 / Pi 4: Ubuntu Server 24.04 + Docker + the eyecar-ros image
-# preloaded (works without internet). Runs only when a release is published and attaches the image to it.
+# preloaded (works without internet). On a published release it attaches the image to the release;
+# a manual run (Actions -> pi-image -> Run workflow) only leaves the image as a build artifact.
 
 on:
   release:
     types: [ published ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag of the Docker image to bake in (latest, sha-1234567 or 1.2.3)'
+        default: latest
+        required: true
 
 concurrency:
   group: pi-image-${{ github.ref }}
@@ -27,6 +34,7 @@ permissions:
 jobs:
   # the Docker image of this tag must exist before it is baked into the SD image
   wait-docker:
+    if: github.event_name == 'release'
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     permissions:
@@ -52,6 +60,8 @@ jobs:
 
   image:
     needs: wait-docker
+    # after wait-docker on a release; a manual run skips wait-docker
+    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 180
     outputs:
@@ -62,9 +72,15 @@ jobs:
 
       - name: Version and registry
         id: ver
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          # the tag v1.2.3 gives the Docker tag 1.2.3 (docker.yml uses the same rule)
-          version="${GITHUB_REF_NAME#v}"
+          if [[ "${{ github.event_name }}" == release ]]; then
+            # the tag v1.2.3 gives the Docker tag 1.2.3 (docker.yml uses the same rule)
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="${INPUT_VERSION:-latest}"
+          fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
@@ -167,6 +183,7 @@ jobs:
 
   release:
     needs: image
+    if: github.event_name == 'release'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
