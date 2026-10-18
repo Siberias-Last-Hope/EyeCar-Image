@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Tag of the Docker image to bake in (latest, sha-1234567 or 1.2.3)'
+        description: 'Tag of the Docker image to bake in (latest, sha-1234567 or the name of a release tag)'
         default: latest
         required: true
 
@@ -76,8 +76,8 @@ jobs:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           if [[ "${{ github.event_name }}" == release ]]; then
-            # the tag v1.2.3 gives the Docker tag 1.2.3 (docker.yml uses the same rule)
-            version="${GITHUB_REF_NAME#v}"
+            # the name of the release tag as it is; the same rule as in docker.yml
+            version=$(printf '%s' "${GITHUB_REF_NAME}" | sed 's/[^A-Za-z0-9_.-]/-/g')
           else
             version="${INPUT_VERSION:-latest}"
           fi

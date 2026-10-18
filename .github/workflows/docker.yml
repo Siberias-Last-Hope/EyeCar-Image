@@ -1,7 +1,8 @@
 # Copyright (C) 2026 MaxX-Akela, MIT License
 name: docker
 
-# When a release is published (tag v*) the image gets the tags latest, X.Y.Z and sha-<commit>;
+# When a release is published the image gets the tags latest, sha-<commit> and the name of the release tag as it is
+# (1.2.3, v1.2.3 or a word; characters Docker does not allow become '-');
 # a manual run (Actions -> docker -> Run workflow) gives latest and sha-<commit>
 on:
   release:
@@ -92,6 +93,11 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      - name: Docker tag from the release tag
+        id: reltag
+        if: github.event_name == 'release'
+        run: echo "name=$(printf '%s' "${GITHUB_REF_NAME}" | sed 's/[^A-Za-z0-9_.-]/-/g')" >> "$GITHUB_OUTPUT"
+
       - uses: docker/metadata-action@v5
         id: meta
         with:
@@ -99,7 +105,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
-            type=semver,pattern={{version}}
+            type=raw,value=${{ steps.reltag.outputs.name }},enable=${{ github.event_name == 'release' }}
 
       - uses: docker/login-action@v3
         with:
