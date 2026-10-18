@@ -137,7 +137,7 @@ jobs:
             IMAGES_DIR="${PWD}/images" \
             EYECAR_VERSION="${VERSION}" \
             IMAGE_REGISTRY="${REGISTRY}" \
-            builder/build-image.sh
+            bash builder/build-image.sh
           rm -rf images base.img.xz
           df -h /
 
