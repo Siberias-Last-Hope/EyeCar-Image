@@ -44,8 +44,10 @@ RUN --mount=type=cache,id=apt-ros-${TARGETPLATFORM},target=/var/cache/apt,sharin
         ros-${ROS_DISTRO}-v4l2-camera \
         ros-${ROS_DISTRO}-teleop-twist-keyboard \
         ros-${ROS_DISTRO}-foxglove-bridge \
+        ros-${ROS_DISTRO}-web-video-server \
         ros-${ROS_DISTRO}-cv-bridge \
         python3-opencv \
+        python3-pyzbar \
         python3-serial \
         v4l-utils
 

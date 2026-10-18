@@ -12,6 +12,7 @@
 
   <exec_depend>v4l2_camera</exec_depend>
   <exec_depend>foxglove_bridge</exec_depend>
+  <exec_depend>web_video_server</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>
 
   <test_depend>ament_copyright</test_depend>

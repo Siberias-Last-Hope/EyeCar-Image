@@ -18,6 +18,21 @@ def generate_launch_description():
             output='screen',
         ),
         Node(
+            package='eyecar_camera',
+            executable='camera_node',
+            name='camera_throttle',
+            parameters=[{'rate': 5.0}],
+            condition=IfCondition(LaunchConfiguration('camera')),
+            output='screen',
+        ),
+        Node(
+            package='web_video_server',
+            executable='web_video_server',
+            name='web_video_server',
+            parameters=[{'port': 8080}],
+            output='screen',
+        ),
+        Node(
             package='foxglove_bridge',
             executable='foxglove_bridge',
             name='foxglove_bridge',

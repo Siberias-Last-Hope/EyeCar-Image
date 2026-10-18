@@ -3,7 +3,7 @@
 <package format="3">
   <name>eyecar_camera</name>
   <version>0.0.0</version>
-  <description>Pub /camera/image_raw</description>
+  <description>Pub /camera/image_raw_throttled (5 Hz) from /camera/image_raw</description>
   <maintainer email="mstepanov2610@gmail.com">akela</maintainer>
   <license>MIT</license>
 

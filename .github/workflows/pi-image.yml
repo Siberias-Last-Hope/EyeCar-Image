@@ -193,18 +193,6 @@ jobs:
           name: eyecar-pi-image-${{ needs.image.outputs.version }}
           path: dist
 
-      - name: Release notes
-        run: |
-          cat > notes.md <<'NOTES'
-          SD card image for Raspberry Pi 4 and 5 (Ubuntu Server 24.04, Docker, ROS 2 Jazzy in the `eyecar-ros` container).
-
-          **Not tested on hardware yet.**
-
-          - Login: `pi` / `raspberry` (the password must be changed at the first login)
-          - Wi-Fi access point: `eyecar-XXXX`, password `eyecarwifi`, the car is at 192.168.11.1 (`ssh pi@eyecar-XXXX.local`)
-          - Foxglove: open connection `ws://192.168.11.1:8765`
-          NOTES
-
       - uses: softprops/action-gh-release@v2
         with:
           body_path: notes.md
