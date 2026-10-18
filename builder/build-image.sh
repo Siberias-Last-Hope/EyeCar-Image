@@ -45,6 +45,8 @@ e2fsck -fy "${LOOP}p2" || [[ $? -le 1 ]]
 resize2fs "${LOOP}p2"
 
 mount "${LOOP}p2" "${MNT}"
+# the root partition of the Ubuntu image has no mount point for the firmware partition
+mkdir -p "${MNT}/boot/firmware"
 mount "${LOOP}p1" "${MNT}/boot/firmware"
 
 # ---- /opt/eyecar ----------------------------------------------------------------------
