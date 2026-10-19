@@ -35,5 +35,5 @@ services:
   pc:
     <<: *ros
     profiles: [ pc ]
-    # no camera on a laptop
-    command: ros2 launch eyecar_bringup eyecar.launch.py camera:=false
+    # no camera, no Arduino and no teleop page on a laptop
+    command: ros2 launch eyecar_bringup eyecar.launch.py camera:=false base:=false teleop:=false

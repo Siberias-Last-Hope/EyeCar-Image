@@ -3,12 +3,16 @@
 <package format="3">
   <name>eyecar_teleop</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Manual control: keyboard and a browser page with gamepad support</description>
   <maintainer email="mstepanov2610@gmail.com">akela</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>ament_index_python</depend>
+
+  <exec_depend>python3-aiohttp</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

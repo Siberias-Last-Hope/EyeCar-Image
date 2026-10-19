@@ -10,12 +10,13 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/web', ['web/index.html']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='akela',
     maintainer_email='mstepanov2610@gmail.com',
-    description='TODO: Package description',
+    description='Manual control: keyboard and a browser page with gamepad support',
     license='MIT',
     extras_require={
         'test': [
@@ -24,7 +25,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'keyboard_teleop = eyecar_teleop.keyboard_teleop:main'
+            'keyboard_teleop = eyecar_teleop.keyboard_teleop:main',
+            'web_teleop = eyecar_teleop.web_teleop:main',
         ],
     },
 )

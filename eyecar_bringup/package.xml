@@ -10,6 +10,9 @@
   <depend>launch</depend>
   <depend>launch_ros</depend>
 
+  <exec_depend>eyecar_base</exec_depend>
+  <exec_depend>eyecar_camera</exec_depend>
+  <exec_depend>eyecar_teleop</exec_depend>
   <exec_depend>v4l2_camera</exec_depend>
   <exec_depend>foxglove_bridge</exec_depend>
   <exec_depend>web_video_server</exec_depend>

@@ -9,6 +9,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('camera', default_value='true'),
         DeclareLaunchArgument('video_device', default_value='/dev/video0'),
+        DeclareLaunchArgument('base', default_value='true'),
+        DeclareLaunchArgument('teleop', default_value='true'),
         Node(
             package='v4l2_camera',
             executable='v4l2_camera_node',
@@ -23,6 +25,21 @@ def generate_launch_description():
             name='camera_throttle',
             parameters=[{'rate': 5.0}],
             condition=IfCondition(LaunchConfiguration('camera')),
+            output='screen',
+        ),
+        Node(
+            package='eyecar_base',
+            executable='base_node',
+            name='base',
+            condition=IfCondition(LaunchConfiguration('base')),
+            output='screen',
+        ),
+        Node(
+            package='eyecar_teleop',
+            executable='web_teleop',
+            name='web_teleop',
+            parameters=[{'port': 80}],
+            condition=IfCondition(LaunchConfiguration('teleop')),
             output='screen',
         ),
         Node(

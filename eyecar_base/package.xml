@@ -3,13 +3,15 @@
 <package format="3">
   <name>eyecar_base</name>
   <version>0.0.0</version>
-  <description>Serial-most to Arduino</description>
+  <description>Serial bridge to the Arduino base controller and the eyecar Python API</description>
   <maintainer email="mstepanov2610@gmail.com">akela</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
+
+  <exec_depend>python3-serial</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

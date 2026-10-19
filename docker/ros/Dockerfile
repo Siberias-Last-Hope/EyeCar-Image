@@ -36,7 +36,7 @@ FROM base AS deps
 ARG ROS_DISTRO
 ARG TARGETPLATFORM
 
-# camera, teleop, web access (Foxglove), OpenCV, Arduino serial, V4L2 tools
+# camera, teleop, web access (Foxglove, teleop page), OpenCV, Arduino serial, V4L2 tools
 RUN --mount=type=cache,id=apt-ros-${TARGETPLATFORM},target=/var/cache/apt,sharing=locked \
     --mount=type=cache,id=apt-ros-lists-${TARGETPLATFORM},target=/var/lib/apt/lists,sharing=locked \
     apt-get update -y && \
@@ -49,6 +49,7 @@ RUN --mount=type=cache,id=apt-ros-${TARGETPLATFORM},target=/var/cache/apt,sharin
         python3-opencv \
         python3-pyzbar \
         python3-serial \
+        python3-aiohttp \
         v4l-utils
 
 # only package.xml files, so this layer is cached until dependencies change;

@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EyeCar — управление</title>
+<style>
+  :root {
+    --bg: #0f1318; --panel: #171d25; --line: #2a323d; --text: #e6e9ee; --muted: #8d97a5;
+    --accent: #4aa3ff; --ok: #3ecf8e; --warn: #f5a524; --bad: #ff5d5d; --field: #0f1318;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f3f5f8; --panel: #ffffff; --line: #d6dbe3; --text: #1b2430; --muted: #627083;
+      --accent: #1c6fd1; --ok: #14915b; --warn: #b9770e; --bad: #d12f2f; --field: #eef1f5;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  h1 { font-size: 17px; margin: 0 auto 0 0; font-weight: 650; }
+  h2 { font-size: 13px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .06em;
+       color: var(--muted); font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); }
+  .dot.on { background: var(--ok); }
+  .dot.warn { background: var(--warn); }
+  main {
+    display: grid; gap: 16px; padding: 16px; max-width: 1100px; margin: 0 auto;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .wide { grid-column: 1 / -1; }
+  .video { display: grid; place-items: center; background: #000; border-radius: 10px;
+           overflow: hidden; min-height: 160px; position: relative; }
+  .video img { width: 100%; max-height: 52vh; object-fit: contain; display: block; }
+  .video .note { position: absolute; color: #9aa4b2; }
+  button, select {
+    font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
+  button.big { padding: 14px 18px; font-weight: 650; flex: 1; }
+  button.learning { border-color: var(--warn); color: var(--warn); }
+  button:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .field { display: grid; grid-template-columns: 1fr minmax(110px, 1.2fr) 44px; gap: 8px;
+           align-items: center; margin: 6px 0; }
+  .field.bind { grid-template-columns: 1fr auto auto; }
+  .field label { color: var(--text); }
+  .field output { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .field .what { color: var(--muted); text-align: right; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .bar { position: relative; height: 12px; background: var(--field); border: 1px solid var(--line);
+         border-radius: 6px; overflow: hidden; }
+  .bar i { position: absolute; top: 0; bottom: 0; background: var(--accent); }
+  .bar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px;
+                background: var(--muted); }
+  .meter { display: grid; grid-template-columns: 64px 1fr 48px; gap: 8px; align-items: center;
+           margin: 8px 0; }
+  .meter span:last-child { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .touch { margin-top: 16px; }
+  .touch input[type=range] { height: 36px; }
+  .raw { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 12px;
+         margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+  .raw .bar { height: 8px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  .btns b { min-width: 26px; text-align: center; font-size: 12px; font-weight: 500; padding: 2px 4px;
+            border: 1px solid var(--line); border-radius: 5px; color: var(--muted); }
+  .btns b.down { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .hint { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0; }
+  kbd { background: var(--field); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>EyeCar</h1>
+  <span class="chip"><span class="dot" id="dotLink"></span><span id="txtLink">нет связи</span></span>
+  <span class="chip"><span class="dot" id="dotArm"></span><span id="txtArm">колёса заблокированы</span></span>
+  <span class="chip"><span class="dot" id="dotPad"></span><span id="txtPad">геймпад не найден</span></span>
+</header>
+
+<main>
+  <section class="video wide">
+    <img id="video" alt="">
+    <span class="note" id="videoNote">видео</span>
+  </section>
+
+  <section class="card">
+    <h2>Управление</h2>
+    <div class="row">
+      <button class="big" id="btnControl">Включить управление</button>
+      <button class="big" id="btnArm">Разрешить колёса (Arm)</button>
+    </div>
+    <div class="meter"><span>Газ</span><div class="bar"><i id="barM"></i></div><span id="valM">0</span></div>
+    <div class="meter"><span>Руль</span><div class="bar"><i id="barS"></i></div><span id="valS">0</span></div>
+    <div class="touch">
+      <div class="field"><label for="tm">Газ</label><input type="range" id="tm" min="-100" max="100" value="0"><output id="tmv">0</output></div>
+      <div class="field"><label for="ts">Руль</label><input type="range" id="ts" min="-100" max="100" value="0"><output id="tsv">0</output></div>
+      <div class="field"><label for="kbSpeed">Клавиши</label><input type="range" id="kbSpeed" min="5" max="100" value="30"><output id="kbSpeedv">30</output></div>
+    </div>
+    <p class="hint">
+      Страница шлёт команды, только пока включено «управление». Если страница замолчит или
+      закроется, колёса остановятся сами. Клавиши: <kbd>W</kbd><kbd>S</kbd> газ, <kbd>A</kbd><kbd>D</kbd> руль,
+      <kbd>Пробел</kbd> — стоп и блокировка колёс.
+    </p>
+    <p class="hint"><label><input type="checkbox" id="videoOn" checked> показывать видео</label></p>
+  </section>
+
+  <section class="card">
+    <h2>Геймпад</h2>
+    <div id="padOff" class="hint">Подключите геймпад (Xbox, Logitech…) и нажмите любую кнопку.</div>
+    <div id="padOn" hidden>
+      <div class="row">
+        <button id="btnCenter">Запомнить центр</button>
+        <button id="btnRange">Калибровать диапазон</button>
+        <button id="btnReset">Сбросить</button>
+      </div>
+      <div id="rangeHint" class="hint" hidden>Несколько раз выведите стики и курки в крайние положения, затем нажмите «Готово».</div>
+
+      <div id="bindings"></div>
+      <hr>
+      <div class="field"><label for="p_mode">Газ</label>
+        <select id="p_mode" data-path="throttle.mode">
+          <option value="pedals">курки: вперёд − назад</option>
+          <option value="axis">одна ось</option>
+        </select><span></span></div>
+      <div class="field"><label>Руль: инверсия</label><input type="checkbox" data-path="steer.invert"><span></span></div>
+      <div class="field" id="rowThInvert"><label>Газ: инверсия</label><input type="checkbox" data-path="throttle.invert"><span></span></div>
+      <div class="field"><label>Руль: мёртвая зона</label><input type="range" min="0" max="50" data-path="steer.deadzone"><output></output></div>
+      <div class="field"><label>Руль: экспонента</label><input type="range" min="0" max="100" data-path="steer.expo"><output></output></div>
+      <div class="field"><label>Руль: предел</label><input type="range" min="10" max="100" data-path="steer.limit"><output></output></div>
+      <div class="field"><label>Газ: мёртвая зона</label><input type="range" min="0" max="50" data-path="throttle.deadzone"><output></output></div>
+      <div class="field"><label>Газ: экспонента</label><input type="range" min="0" max="100" data-path="throttle.expo"><output></output></div>
+      <div class="field"><label>Газ: предел</label><input type="range" min="5" max="100" data-path="throttle.limit"><output></output></div>
+      <hr>
+      <div class="raw" id="rawAxes"></div>
+      <div class="btns" id="rawBtns"></div>
+      <p class="hint" id="padId"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, lo = -1, hi = 1) => Math.max(lo, Math.min(hi, v));
+
+const store = {
+  get(key, fallback) {
+    try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); }
+    catch (e) { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private mode */ }
+  },
+};
+
+// ---- settings
+
+const axisSrc = (i) => ({type: 'axis', i, c: 0, min: -1, max: 1});
+const buttonSrc = (i) => ({type: 'button', i});
+// A stick pushed right reads +1 and up reads -1; the car takes steering positive = left.
+const defaults = () => ({
+  steer: {src: axisSrc(0), invert: true, deadzone: 8, expo: 0, limit: 100},
+  throttle: {mode: 'pedals', src: axisSrc(1), fwd: buttonSrc(7), rev: buttonSrc(6),
+             invert: true, deadzone: 8, expo: 0, limit: 50},
+  arm: buttonSrc(9),
+  stop: buttonSrc(1),
+});
+
+const BINDINGS = [
+  {path: 'steer.src', label: 'Руль', accept: 'axis'},
+  {path: 'throttle.src', label: 'Газ', accept: 'axis', when: (c) => c.throttle.mode === 'axis'},
+  {path: 'throttle.fwd', label: 'Газ вперёд', accept: 'any', when: (c) => c.throttle.mode === 'pedals'},
+  {path: 'throttle.rev', label: 'Газ назад', accept: 'any', when: (c) => c.throttle.mode === 'pedals'},
+  {path: 'arm', label: 'Arm вкл/выкл', accept: 'button'},
+  {path: 'stop', label: 'Аварийный стоп', accept: 'button'},
+];
+
+const getPath = (obj, path) => path.split('.').reduce((o, k) => o[k], obj);
+function setPath(obj, path, value) {
+  const keys = path.split('.');
+  const last = keys.pop();
+  keys.reduce((o, k) => o[k], obj)[last] = value;
+}
+function merge(base, saved) {
+  if (!saved || typeof saved !== 'object') return base;
+  for (const k of Object.keys(base)) {
+    if (!(k in saved)) continue;
+    base[k] = (base[k] && typeof base[k] === 'object' && !Array.isArray(base[k]))
+      ? merge(base[k], saved[k]) : saved[k];
+  }
+  return base;
+}
+
+// ---- state
+
+let cfg = defaults();
+let cfgKey = null;          // settings key of the pad in use
+let pad = null;
+let learning = null;        // {path, accept, base}
+let ranging = null;         // {path -> {min, max}} while calibrating the range
+let controlOn = false;
+let armed = false;
+let ws = null;
+let out = {m: 0, s: 0};
+const edge = {arm: false, stop: false};
+const keys = new Set();
+const touch = {m: 0, s: 0};
+
+const saveCfg = () => { if (cfgKey) store.set(cfgKey, cfg); };
+
+// ---- gamepad -> command
+
+function normAxis(src, raw) {
+  const {c, min, max} = src;
+  if (raw >= c) return max > c ? clamp((raw - c) / (max - c)) : 0;
+  return c > min ? clamp((raw - c) / (c - min)) : 0;
+}
+
+function srcValue(p, src) {
+  if (!p || !src) return 0;
+  if (src.type === 'axis') {
+    const raw = p.axes[src.i];
+    return raw === undefined ? 0 : normAxis(src, raw);
+  }
+  const b = p.buttons[src.i];
+  return b ? b.value : 0;
+}
+
+function shape(v, c) {
+  const dz = c.deadzone / 100, e = c.expo / 100, a = Math.abs(v);
+  if (a <= dz) return 0;
+  const x = (a - dz) / (1 - dz);
+  return Math.sign(v) * ((1 - e) * x + e * x * x * x) * c.limit / 100;
+}
+
+function padOutput(p) {
+  if (!p) return {m: 0, s: 0};
+  const st = cfg.steer, th = cfg.throttle;
+  let s = srcValue(p, st.src);
+  if (st.invert) s = -s;
+  let m;
+  if (th.mode === 'axis') {
+    m = srcValue(p, th.src);
+    if (th.invert) m = -m;
+    m = shape(m, th);
+  } else {
+    m = shape(Math.max(0, srcValue(p, th.fwd)), th) - shape(Math.max(0, srcValue(p, th.rev)), th);
+  }
+  return {m, s: shape(s, st)};
+}
+
+function keyboardOutput() {
+  const speed = +$('kbSpeed').value / 100;
+  const down = (...codes) => codes.some((k) => keys.has(k));
+  const m = (down('KeyW', 'ArrowUp') ? speed : 0) - (down('KeyS', 'ArrowDown') ? speed : 0);
+  const s = (down('KeyA', 'ArrowLeft') ? 1 : 0) - (down('KeyD', 'ArrowRight') ? 1 : 0);
+  return {m, s: s * cfg.steer.limit / 100};
+}
+
+function currentPad() {
+  const list = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of list) if (p && p.connected) return p;
+  return null;
+}
+
+// ---- learning and calibration
+
+function detect(p, run) {
+  for (let i = 0; i < p.axes.length; i++) {
+    if (run.accept !== 'button' && Math.abs(p.axes[i] - run.base.axes[i]) > 0.5) {
+      return {type: 'axis', i, c: run.base.axes[i], min: -1, max: 1};
+    }
+  }
+  for (let i = 0; i < p.buttons.length; i++) {
+    if (run.accept !== 'axis' && p.buttons[i].value > 0.5 && run.base.buttons[i] < 0.2) {
+      return buttonSrc(i);
+    }
+  }
+  return null;
+}
+
+function startLearning(b) {
+  if (!pad) return;
+  if (learning && learning.path === b.path) { learning = null; renderBindings(); return; }
+  learning = {
+    path: b.path, accept: b.accept,
+    base: {axes: Array.from(pad.axes), buttons: pad.buttons.map((x) => x.value)},
+  };
+  renderBindings();
+}
+
+function boundAxes() {
+  const found = [];
+  for (const b of BINDINGS) {
+    if (b.when && !b.when(cfg)) continue;
+    const src = getPath(cfg, b.path);
+    if (src.type === 'axis') found.push({path: b.path, src});
+  }
+  return found;
+}
+
+function calibrateCenter() {
+  if (!pad) return;
+  for (const {src} of boundAxes()) src.c = pad.axes[src.i] ?? src.c;
+  saveCfg();
+}
+
+function toggleRange() {
+  if (!pad) return;
+  if (!ranging) {
+    ranging = {};
+    for (const {path, src} of boundAxes()) ranging[path] = {min: src.c, max: src.c};
+  } else {
+    for (const {path, src} of boundAxes()) {
+      const seen = ranging[path];
+      if (!seen) continue;
+      if (seen.min < src.c - 0.2) src.min = seen.min;
+      if (seen.max > src.c + 0.2) src.max = seen.max;
+    }
+    ranging = null;
+    saveCfg();
+  }
+  $('btnRange').textContent = ranging ? 'Готово' : 'Калибровать диапазон';
+  $('btnRange').classList.toggle('primary', !!ranging);
+  $('rangeHint').hidden = !ranging;
+}
+
+function trackRange() {
+  for (const {path, src} of boundAxes()) {
+    const raw = pad.axes[src.i];
+    const seen = ranging[path];
+    if (raw === undefined || !seen) continue;
+    seen.min = Math.min(seen.min, raw);
+    seen.max = Math.max(seen.max, raw);
+  }
+}
+
+// ---- settings UI
+
+function srcLabel(src) {
+  return src.type === 'axis' ? 'ось ' + src.i : 'кнопка ' + src.i;
+}
+
+function renderBindings() {
+  const box = $('bindings');
+  box.textContent = '';
+  for (const b of BINDINGS) {
+    if (b.when && !b.when(cfg)) continue;
+    const row = document.createElement('div');
+    row.className = 'field bind';
+    const name = document.createElement('label');
+    name.textContent = b.label;
+    const what = document.createElement('span');
+    what.className = 'what';
+    const learn = learning && learning.path === b.path;
+    what.textContent = learn ? 'жду…' : srcLabel(getPath(cfg, b.path));
+    const btn = document.createElement('button');
+    btn.textContent = learn ? 'Отмена' : 'Назначить';
+    btn.classList.toggle('learning', !!learn);
+    btn.onclick = () => startLearning(b);
+    row.append(name, what, btn);
+    box.append(row);
+  }
+}
+
+function renderFields() {
+  for (const el of document.querySelectorAll('[data-path]')) {
+    const v = getPath(cfg, el.dataset.path);
+    if (el.type === 'checkbox') el.checked = !!v;
+    else el.value = v;
+    const o = el.parentElement.querySelector('output');
+    if (o) o.textContent = v + '%';
+  }
+  $('rowThInvert').hidden = cfg.throttle.mode !== 'axis';
+}
+
+function renderConfig() {
+  renderBindings();
+  renderFields();
+}
+
+function bindFields() {
+  for (const el of document.querySelectorAll('[data-path]')) {
+    el.addEventListener('input', () => {
+      const v = el.type === 'checkbox' ? el.checked : (el.type === 'range' ? +el.value : el.value);
+      setPath(cfg, el.dataset.path, v);
+      saveCfg();
+      if (el.dataset.path === 'throttle.mode') { learning = null; renderConfig(); }
+      else renderFields();
+    });
+  }
+}
+
+function buildRaw() {
+  const axes = $('rawAxes'), btns = $('rawBtns');
+  axes.textContent = '';
+  btns.textContent = '';
+  for (let i = 0; i < pad.axes.length; i++) {
+    const cell = document.createElement('div');
+    cell.innerHTML = '<div>ось ' + i + ' <span></span></div><div class="bar"><i></i></div>';
+    axes.append(cell);
+  }
+  for (let i = 0; i < pad.buttons.length; i++) {
+    const b = document.createElement('b');
+    b.textContent = i;
+    btns.append(b);
+  }
+}
+
+function updateRaw() {
+  const cells = $('rawAxes').children;
+  for (let i = 0; i < cells.length && i < pad.axes.length; i++) {
+    const v = pad.axes[i];
+    cells[i].querySelector('span').textContent = v.toFixed(2);
+    setBar(cells[i].querySelector('i'), v);
+  }
+  const marks = $('rawBtns').children;
+  for (let i = 0; i < marks.length && i < pad.buttons.length; i++) {
+    marks[i].classList.toggle('down', pad.buttons[i].pressed || pad.buttons[i].value > 0.5);
+  }
+}
+
+function attachPad(p) {
+  const key = 'eyecar.pad:' + p.id;
+  cfgKey = key;
+  cfg = merge(defaults(), store.get(key, null));
+  learning = null;
+  ranging = null;
+  $('btnRange').textContent = 'Калибровать диапазон';
+  $('btnRange').classList.remove('primary');
+  $('rangeHint').hidden = true;
+  $('padId').textContent = p.id + (p.mapping === 'standard' ? '' : ' (нестандартная раскладка: назначьте оси вручную)');
+  $('txtPad').textContent = 'геймпад: ' + p.id.replace(/\s*\(.*$/, '').slice(0, 28);
+  $('padOff').hidden = true;
+  $('padOn').hidden = false;
+  buildRaw();
+  renderConfig();
+}
+
+function detachPad() {
+  cfgKey = null;
+  cfg = defaults();
+  learning = null;
+  ranging = null;
+  $('txtPad').textContent = 'геймпад не найден';
+  $('padOff').hidden = false;
+  $('padOn').hidden = true;
+}
+
+// ---- link to the car
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/teleop/ws');
+  ws.onopen = () => setLink(true);
+  ws.onmessage = (e) => {
+    try { setArmed(!!JSON.parse(e.data).armed); } catch (err) { /* ignore a bad frame */ }
+  };
+  ws.onclose = () => { setLink(false); setTimeout(connect, 1000); };
+}
+
+const send = (obj) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); };
+const setArm = (v) => send({t: 'arm', v});
+
+function setLink(on) {
+  $('dotLink').classList.toggle('on', on);
+  $('txtLink').textContent = on ? 'на связи' : 'нет связи';
+  if (!on) setControl(false);
+}
+
+function setArmed(v) {
+  armed = v;
+  $('dotArm').classList.toggle('on', v);
+  $('txtArm').textContent = v ? 'колёса разрешены' : 'колёса заблокированы';
+  $('btnArm').classList.toggle('armed', v);
+  $('btnArm').textContent = v ? 'Заблокировать колёса' : 'Разрешить колёса (Arm)';
+}
+
+function setControl(on) {
+  if (controlOn && !on) send({t: 'drive', m: 0, s: 0});
+  controlOn = on;
+  $('btnControl').classList.toggle('primary', on);
+  $('btnControl').textContent = on ? 'Управление включено' : 'Включить управление';
+}
+
+// ---- main loop
+
+function setBar(el, v) {
+  const a = Math.min(1, Math.abs(v)) * 50;
+  el.style.width = a + '%';
+  el.style.left = (v >= 0 ? 50 : 50 - a) + '%';
+}
+
+function tick() {
+  const p = currentPad();
+  if (p && (!pad || p.id !== pad.id)) attachPad(p);
+  if (!p && pad) detachPad();
+  pad = p;
+
+  if (pad) {
+    if (learning) {
+      const hit = detect(pad, learning);
+      if (hit) { setPath(cfg, learning.path, hit); learning = null; saveCfg(); renderBindings(); }
+    }
+    if (ranging) trackRange();
+    const a = srcValue(pad, cfg.arm) > 0.5, st = srcValue(pad, cfg.stop) > 0.5;
+    if (a && !edge.arm && !learning) setArm(!armed);
+    if (st && !edge.stop && !learning) setArm(false);
+    edge.arm = a;
+    edge.stop = st;
+    updateRaw();
+  }
+
+  const g = padOutput(learning ? null : pad), k = keyboardOutput();
+  out = {m: g.m || k.m || touch.m, s: g.s || k.s || touch.s};
+  setBar($('barM'), out.m);
+  setBar($('barS'), -out.s);          // steering is +left; draw left on the left
+  $('valM').textContent = Math.round(out.m * 100) + '%';
+  $('valS').textContent = Math.round(out.s * 100) + '%';
+
+  if (controlOn) send({t: 'drive', m: +out.m.toFixed(3), s: +out.s.toFixed(3)});
+}
+
+// ---- wiring
+
+$('btnControl').onclick = () => setControl(!controlOn);
+$('btnArm').onclick = () => setArm(!armed);
+$('btnCenter').onclick = calibrateCenter;
+$('btnRange').onclick = toggleRange;
+$('btnReset').onclick = () => { cfg = defaults(); learning = null; saveCfg(); renderConfig(); };
+
+for (const [id, key] of [['tm', 'm'], ['ts', 's']]) {
+  const el = $(id), label = $(id + 'v');
+  // slider right = steering right = negative; gas up = forward
+  const sign = key === 's' ? -1 : 1;
+  const apply = () => { touch[key] = sign * el.value / 100; label.textContent = el.value; };
+  const release = () => { el.value = 0; apply(); };
+  el.addEventListener('input', apply);
+  for (const ev of ['pointerup', 'pointercancel', 'touchend', 'blur']) el.addEventListener(ev, release);
+}
+$('kbSpeed').addEventListener('input', () => { $('kbSpeedv').textContent = $('kbSpeed').value; });
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && learning) { learning = null; renderBindings(); return; }
+  if (e.code === 'Space') { setArm(false); e.preventDefault(); return; }
+  if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    keys.add(e.code);
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', (e) => keys.delete(e.code));
+window.addEventListener('blur', () => { keys.clear(); setControl(false); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { keys.clear(); setControl(false); } });
+window.addEventListener('gamepadconnected', tick);
+window.addEventListener('gamepaddisconnected', tick);
+
+function setupVideo() {
+  const img = $('video'), note = $('videoNote');
+  const on = $('videoOn').checked;
+  store.set('eyecar.video', on);
+  if (!on) { img.removeAttribute('src'); note.hidden = false; note.textContent = 'видео выключено'; return; }
+  note.hidden = false;
+  note.textContent = 'ожидание видео…';
+  img.onload = () => { note.hidden = true; };
+  img.onerror = () => { note.hidden = false; note.textContent = 'нет видео (порт 8080)'; };
+  img.src = location.protocol + '//' + location.hostname +
+    ':8080/stream?topic=/camera/image_raw&type=mjpeg&quality=50&width=640&height=480';
+}
+$('videoOn').checked = store.get('eyecar.video', true) !== false;
+$('videoOn').addEventListener('change', setupVideo);
+
+bindFields();
+renderConfig();
+setupVideo();
+connect();
+setInterval(tick, 50);
+</script>
+</body>
+</html>
